@@ -1,0 +1,147 @@
+@baseUrl = http://localhost:5224
+# Dán token nhận được sau khi login vào các biến dưới
+@tenantToken =
+@landlordToken =
+@adminToken =
+
+### ===== AUTH =====
+
+### Đăng ký người thuê
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Nguyễn Văn A",
+  "email": "nguyenvana@gmail.com",
+  "password": "123456",
+  "confirmPassword": "123456",
+  "phoneNumber": "0912345678",
+  "role": "Tenant"
+}
+
+### Đăng nhập (tài khoản seed)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "tenant@houserental.vn",
+  "password": "Tenant@123"
+}
+
+### Thông tin tài khoản hiện tại
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{tenantToken}}
+
+### ===== PROPERTIES =====
+
+### Tìm kiếm nhà (công khai)
+GET {{baseUrl}}/api/properties?city=Đà Nẵng&minPrice=1000000&maxPrice=10000000&sortBy=price_asc&page=1&pageSize=10
+
+### Chi tiết nhà
+GET {{baseUrl}}/api/properties/1
+
+### [Landlord] Đăng tin mới
+POST {{baseUrl}}/api/properties
+Authorization: Bearer {{landlordToken}}
+Content-Type: application/json
+
+{
+  "title": "Căn hộ mini full nội thất Thanh Khê",
+  "description": "Gần biển, có ban công, thang máy.",
+  "address": "12 Hà Huy Tập",
+  "ward": "Xuân Hà",
+  "district": "Thanh Khê",
+  "city": "Đà Nẵng",
+  "type": "Apartment",
+  "area": 35,
+  "bedrooms": 1,
+  "bathrooms": 1,
+  "pricePerMonth": 4500000,
+  "deposit": 4500000,
+  "amenities": ["Wifi", "Điều hòa", "Thang máy"],
+  "imageUrls": ["https://picsum.photos/seed/mini1/800/600"]
+}
+
+### [Landlord] Nhà của tôi
+GET {{baseUrl}}/api/properties/mine
+Authorization: Bearer {{landlordToken}}
+
+### [Admin] Danh sách tin chờ duyệt
+GET {{baseUrl}}/api/properties/manage?status=PendingApproval
+Authorization: Bearer {{adminToken}}
+
+### [Admin] Duyệt tin
+PATCH {{baseUrl}}/api/properties/3/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "status": "Available" }
+
+### ===== BOOKINGS =====
+
+### [Tenant] Gửi yêu cầu thuê
+POST {{baseUrl}}/api/bookings
+Authorization: Bearer {{tenantToken}}
+Content-Type: application/json
+
+{
+  "propertyId": 1,
+  "startDate": "2026-12-01",
+  "durationMonths": 6,
+  "note": "Tôi muốn xem nhà vào cuối tuần"
+}
+
+### [Tenant] Yêu cầu thuê của tôi
+GET {{baseUrl}}/api/bookings/mine
+Authorization: Bearer {{tenantToken}}
+
+### [Landlord] Yêu cầu thuê nhận được
+GET {{baseUrl}}/api/bookings/received?status=Pending
+Authorization: Bearer {{landlordToken}}
+
+### [Landlord] Duyệt yêu cầu
+PATCH {{baseUrl}}/api/bookings/1/approve
+Authorization: Bearer {{landlordToken}}
+
+### [Landlord] Từ chối yêu cầu
+PATCH {{baseUrl}}/api/bookings/1/reject
+Authorization: Bearer {{landlordToken}}
+Content-Type: application/json
+
+{ "reason": "Nhà đã có người hẹn trước" }
+
+### ===== PAYMENTS =====
+
+### [Tenant] Thanh toán tiền cọc
+POST {{baseUrl}}/api/bookings/1/payments
+Authorization: Bearer {{tenantToken}}
+Content-Type: application/json
+
+{
+  "amount": 9000000,
+  "type": "Deposit",
+  "method": "BankTransfer",
+  "note": "Chuyển khoản cọc"
+}
+
+### [Landlord] Xác nhận đã nhận tiền
+PATCH {{baseUrl}}/api/payments/1/status
+Authorization: Bearer {{landlordToken}}
+Content-Type: application/json
+
+{ "status": "Success" }
+
+### ===== REVIEWS =====
+
+### Đánh giá của nhà
+GET {{baseUrl}}/api/properties/1/reviews
+
+### [Tenant] Viết đánh giá
+POST {{baseUrl}}/api/properties/1/reviews
+Authorization: Bearer {{tenantToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Nhà sạch sẽ, chủ nhà thân thiện"
+}
